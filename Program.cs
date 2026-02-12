@@ -34,7 +34,7 @@ namespace RPGPlayable
         public char Mark { get; protected set; }
         public Health Health { get; private set; }
 
-        protected Entity(int x, int y, char symbol, int hp)
+        protected Entity(int x, int y, char mark, int hp)
         {
             X = x;
             Y = y;
