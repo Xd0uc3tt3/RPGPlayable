@@ -32,8 +32,7 @@ namespace RPGPlayable
         public int X { get; protected set; }
         public int Y { get; protected set; }
         public char Mark { get; protected set; }
-        public Health Health { get; private set; }
-
+        public Health Health { get; protected set; }
 
         protected Entity(int x, int y, char mark, int hp)
         {
@@ -43,67 +42,107 @@ namespace RPGPlayable
             Health = new Health(hp);
         }
 
-        public void SetPosition(int x, int y)
-        {
-            X = x;
-            Y = y;
-        }
-
-        public void Attack(Entity target)
-        {
-            target.Health.TakeDamage(1);
-        }
+        public abstract void TakeTurn(Game game);
     }
 
     class Player : Entity
     {
-        public Player(int x, int y) : base(x, y, 'P', 5)
-        {
+        public Player(int x, int y) : base(x, y, 'P', 50) { }
 
+        public override void TakeTurn(Game game)
+        {
+            var key = Console.ReadKey(true).Key;
+
+            int dx = 0, dy = 0;
+
+            switch (key)
+            {
+                case ConsoleKey.W:
+                    dy = -1; 
+                    break;
+                case ConsoleKey.S:
+                    dy = 1; 
+                    break;
+                case ConsoleKey.A:
+                    dx = -1; 
+                    break;
+                case ConsoleKey.D:
+                    dx = 1; break;
+
+                default: 
+                    return;
+            }
+
+            AttemptMove(game, dx, dy);
+        }
+
+        private void AttemptMove(Game game, int dx, int dy)
+        {
+            int nx = X + dx;
+            int ny = Y + dy;
+
+            Enemy enemy = game.GetEnemyAt(nx, ny);
+            if (enemy != null)
+            {
+                enemy.Health.TakeDamage(2);
+                return;
+            }
+
+            if (game.Map.IsWalkable(nx, ny))
+            {
+                X = nx;
+                Y = ny;
+            }
         }
     }
 
     class Enemy : Entity
     {
-        private static Random random = new Random();
-        public Enemy(int x, int y) : base(x, y, 'E', 5)
+        public Enemy(int x, int y) : base(x, y, 'E', 5) { }
+
+        public override void TakeTurn(Game game)
         {
-            
+            int dx = Math.Sign(game.Player.X - X);
+            int dy = Math.Sign(game.Player.Y - Y);
+
+            AttemptMove(game, dx, dy);
         }
 
-        public (int dx, int dy) GetMove(Player player)
+        private void AttemptMove(Game game, int dx, int dy)
         {
-            int[] directions = { -1, 0, 1 };
-            int dx = directions[random.Next(3)];
-            int dy = directions[random.Next(3)];
+            int nx = X + dx;
+            int ny = Y + dy;
 
-            if (Math.Abs(dx) == Math.Abs(dy)) return (0, 0);
+            if (game.Player.X == nx && game.Player.Y == ny)
+            {
+                game.Player.Health.TakeDamage(1);
+                return;
+            }
 
-            return (dx, dy);
+            if (game.Map.IsWalkable(nx, ny) && game.GetEnemyAt(nx, ny) == null)
+            {
+                X = nx;
+                Y = ny;
+            }
         }
     }
 
     class Map
     {
-        private char[,] grid;
-        public int Width { get; private set; }
-        public int Height { get; private set; }
+        private char[,] tiles;
+        public int Width { get; }
+        public int Height { get; }
 
         public Player Player { get; private set; }
         public List<Enemy> Enemies { get; private set; }
 
         public Map(string filePath)
         {
-            LoadMap(filePath);
-        }
-
-        private void LoadMap(string filePath)
-        {
             var lines = File.ReadAllLines(filePath);
             Height = lines.Length;
             Width = lines[0].Length;
 
-            grid = new char[Width, Height];
+            tiles = new char[Width, Height];
             Enemies = new List<Enemy>();
 
             for (int y = 0; y < Height; y++)
@@ -115,56 +154,32 @@ namespace RPGPlayable
                     if (c == 'P')
                     {
                         Player = new Player(x, y);
-                        grid[x, y] = '.';
+                        tiles[x, y] = '.';
                     }
                     else if (c == 'E')
                     {
                         Enemies.Add(new Enemy(x, y));
-                        grid[x, y] = '.';
+                        tiles[x, y] = '.';
                     }
                     else
                     {
-                        grid[x, y] = c;
+                        tiles[x, y] = c;
                     }
                 }
             }
         }
 
-        public bool IsWall(int x, int y)
+        public bool IsWalkable(int x, int y)
         {
             if (x < 0 || y < 0 || x >= Width || y >= Height)
             {
-                return true;
+                return false;
             }
 
-            return grid[x, y] == '#';
+            return tiles[x, y] == '.';
         }
 
-        public Entity GetEntityAt(int x, int y)
-        {
-            if (Player.X == x && Player.Y == y && !Player.Health.IsDead)
-            {
-                return Player;
-            }
-
-            foreach (var enemy in Enemies)
-            {
-                if (enemy.X == x && enemy.Y == y && !enemy.Health.IsDead)
-                {
-                    return enemy;
-                }
-
-            }
-
-            return null;
-        }
-
-        public void RemoveDeadEnemies()
-        {
-            Enemies.RemoveAll(e => e.Health.IsDead);
-        }
-
-        public void Draw()
+        public void Draw(Player player, List<Enemy> enemies)
         {
             Console.Clear();
 
@@ -172,70 +187,81 @@ namespace RPGPlayable
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    var entity = GetEntityAt(x, y);
-                    if (entity != null)
+                    if (player.X == x && player.Y == y)
                     {
-                        Console.Write(entity.Mark);
+                        Console.Write(player.Mark);
+                    }
+                        
+                    else if (enemies.Exists(e => e.X == x && e.Y == y && !e.Health.IsDead))
+                    {
+                        Console.Write('E');
                     }
                     else
                     {
-                        Console.Write(grid[x, y]);
-
+                        Console.Write(tiles[x, y]);
                     }
+
                 }
                 Console.WriteLine();
             }
 
-            Console.WriteLine($"Player HP: {Player.Health.Current}");
-        }
-
-        public void TryMove(Entity entity, int dx, int dy)
-        {
-            int newX = entity.X + dx;
-            int newY = entity.Y + dy;
-
-            if (IsWall(newX, newY))
-            {
-                return;
-            }
-
-            var target = GetEntityAt(newX, newY);
-
-            if (target != null && target != entity)
-            {
-                entity.Attack(target);
-                return;
-            }
-
-            entity.SetPosition(newX, newY);
+            Console.WriteLine();
+            Console.WriteLine($"Player HP: {player.Health.Current}");
         }
     }
+
+    class Game
+    {
+        public Map Map { get; }
+        public Player Player { get; }
+        private List<Enemy> enemies = new List<Enemy>();
+
+        public Game()
+        {
+            Map = new Map("map.txt");
+
+            Player = Map.Player;
+            enemies = Map.Enemies;
+        }
+
+        public void Run()
+        {
+            while (!Player.Health.IsDead)
+            {
+                enemies.RemoveAll(e => e.Health.IsDead);
+
+                Map.Draw(Player, enemies);
+
+                Player.TakeTurn(this);
+
+                foreach (var enemy in enemies)
+                {
+                    enemy.TakeTurn(this);
+                }
+
+                if (Player.Health.IsDead)
+                {
+                    break;
+                }
+
+            }
+
+            Console.Clear();
+            Console.WriteLine("Game Over.");
+        }
+
+        public Enemy GetEnemyAt(int x, int y)
+        {
+            return enemies.Find(e => e.X == x && e.Y == y && !e.Health.IsDead);
+        }
+    }
+
 
     internal class Program
     {
         static void Main(string[] args)
         {
-            Map map = new Map("map.txt");
-
-            while (!map.Player.Health.IsDead)
-            {
-                map.Draw();
-
-                foreach (var enemy in map.Enemies)
-                {
-                    var move = enemy.GetMove(map.Player);
-                    map.TryMove(enemy, move.dx, move.dy);
-                }
-
-                Console.ReadKey();
-            }
-
-            Console.ReadKey();
+            new Game().Run();
         }
     }
 }
-
-    
-
-
-
