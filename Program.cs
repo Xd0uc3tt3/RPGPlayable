@@ -181,7 +181,7 @@ namespace RPGPlayable
 
         public void Draw(Player player, List<Enemy> enemies)
         {
-            Console.Clear();
+            Console.SetCursorPosition(0, 0);
 
             for (int y = 0; y < Height; y++)
             {
