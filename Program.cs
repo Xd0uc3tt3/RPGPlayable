@@ -61,6 +61,17 @@ namespace RPGPlayable
 
     }
 
+    class Sword : Item
+    {
+        public Sword(int x, int y)
+            : base(x, y, 'S') { }
+
+        public override void OnPickup(Player player)
+        {
+            player.EquipSword();
+        }
+    }
+
 
     abstract class Entity
     {
@@ -83,6 +94,7 @@ namespace RPGPlayable
     class Player : Entity
     {
         public Player(int x, int y) : base(x, y, 'P', 50) { }
+        public bool HasSword { get; private set; } = false;
 
         public override void TakeTurn(Game game)
         {
@@ -119,6 +131,11 @@ namespace RPGPlayable
             Enemy enemy = game.GetEnemyAt(nx, ny);
             if (enemy != null)
             {
+                if (HasSword == true)
+                {
+                    enemy.Health.TakeDamage(2);
+                }
+
                 enemy.Health.TakeDamage(2);
                 return;
             }
@@ -136,6 +153,11 @@ namespace RPGPlayable
                 X = nx;
                 Y = ny;
             }
+        }
+
+        public void EquipSword()
+        {
+            HasSword = true;
         }
     }
 
@@ -212,6 +234,11 @@ namespace RPGPlayable
                         Items.Add(new Medkit(x, y));
                         tiles[x, y] = '.';
                     }
+                    else if (c == 'S')
+                    {
+                        Items.Add(new Sword(x, y));
+                        tiles[x, y] = '.';
+                    }
                     else
                     {
                         tiles[x, y] = c;
@@ -240,26 +267,55 @@ namespace RPGPlayable
                 {
                     if (player.X == x && player.Y == y)
                     {
+                        Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write(player.Mark);
                     }
                         
                     else if (enemies.Exists(e => e.X == x && e.Y == y && !e.Health.IsDead))
                     {
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write('E');
                     }
                     else if (Items.Exists(i => i.X == x && i.Y == y))
                     {
-                        Console.Write(Items.Find(i => i.X == x && i.Y == y).Mark);
+                        var item = Items.Find(i => i.X == x && i.Y == y);
+
+                        if (item.Mark == 'M')
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                        }
+                        else if (item.Mark == 'S')
+                        {
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.White;
+                        }
+
+                        Console.Write(item.Mark);
                     }
                     else
                     {
-                        Console.Write(tiles[x, y]);
+                        char tile = tiles[x, y];
+
+                        if (tile == '#')
+                        {
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                        }
+                        else if (tile == '.')
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkGray;
+                        }
+
+                        Console.Write(tile);
                     }
 
                 }
                 Console.WriteLine();
             }
 
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine();
             Console.WriteLine($"Player HP: {player.Health.Current}");
         }
