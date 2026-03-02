@@ -25,7 +25,42 @@ namespace RPGPlayable
             Current -= amount;
             if (Current < 0) Current = 0;
         }
+        public void Heal(int amount)
+        {
+            Current += amount;
+            if (Current > Max)
+                Current = Max;
+        }
     }
+
+    abstract class Item
+    {
+        public int X { get; protected set; }
+        public int Y { get; protected set; }
+        public char Mark { get; protected set; }
+
+        protected Item(int x, int y, char mark)
+        {
+            X = x;
+            Y = y;
+            Mark = mark;
+        }
+
+        public abstract void OnPickup(Player player);
+    }
+
+    class Medkit : Item
+    {
+        public Medkit(int x, int y)
+            : base(x, y, 'M') { }
+
+        public override void OnPickup(Player player)
+        {
+            player.Health.Heal(5);
+        }
+
+    }
+
 
     abstract class Entity
     {
@@ -88,6 +123,14 @@ namespace RPGPlayable
                 return;
             }
 
+            Item item = game.GetItemAt(nx, ny);
+            if (item != null)
+            {
+                item.OnPickup(this);
+                game.Map.Items.Remove(item);
+                return;
+            }
+
             if (game.Map.IsWalkable(nx, ny))
             {
                 X = nx;
@@ -136,6 +179,8 @@ namespace RPGPlayable
         public Player Player { get; private set; }
         public List<Enemy> Enemies { get; private set; }
 
+        public List<Item> Items { get; private set; }
+
         public Map(string filePath)
         {
             var lines = File.ReadAllLines(filePath);
@@ -144,6 +189,7 @@ namespace RPGPlayable
 
             tiles = new char[Width, Height];
             Enemies = new List<Enemy>();
+            Items = new List<Item>();
 
             for (int y = 0; y < Height; y++)
             {
@@ -159,6 +205,11 @@ namespace RPGPlayable
                     else if (c == 'E')
                     {
                         Enemies.Add(new Enemy(x, y));
+                        tiles[x, y] = '.';
+                    }
+                    else if (c == 'M')
+                    {
+                        Items.Add(new Medkit(x, y));
                         tiles[x, y] = '.';
                     }
                     else
@@ -196,6 +247,10 @@ namespace RPGPlayable
                     {
                         Console.Write('E');
                     }
+                    else if (Items.Exists(i => i.X == x && i.Y == y))
+                    {
+                        Console.Write(Items.Find(i => i.X == x && i.Y == y).Mark);
+                    }
                     else
                     {
                         Console.Write(tiles[x, y]);
@@ -222,6 +277,7 @@ namespace RPGPlayable
 
             Player = Map.Player;
             enemies = Map.Enemies;
+
         }
 
         public void Run()
@@ -253,6 +309,11 @@ namespace RPGPlayable
         public Enemy GetEnemyAt(int x, int y)
         {
             return enemies.Find(e => e.X == x && e.Y == y && !e.Health.IsDead);
+        }
+
+        public Item GetItemAt(int x, int y)
+        {
+            return Map.Items.Find(i => i.X == x && i.Y == y);
         }
     }
 
