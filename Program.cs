@@ -315,6 +315,50 @@ namespace RPGPlayable
         }
     }
 
+    class CowardEnemy : Enemy
+    {
+        public CowardEnemy(int x, int y) : base(x, y, 'C', 7) { }
+
+        public override void TakeTurn(Game game)
+        {
+            int dx = Math.Sign(game.Player.X - X);
+            int dy = Math.Sign(game.Player.Y - Y);
+
+            if (Health.Current <= 2)
+            {
+                dx *= -1;
+                dy *= -1;
+            }
+
+            AttemptMove(game, dx, dy);
+        }
+
+        private void AttemptMove(Game game, int dx, int dy)
+        {
+            int nx = X + dx;
+            int ny = Y + dy;
+
+            if (game.Player.X == nx && game.Player.Y == ny)
+            {
+                int damage = random.Next(1, 6);
+                game.Player.Health.TakeDamage(damage);
+                return;
+            }
+
+            if (game.Map.IsWalkable(nx, ny) && game.GetEnemyAt(nx, ny) == null)
+            {
+                X = nx;
+                Y = ny;
+
+                int damage = game.Map.GetLavaDamage(nx, ny);
+                if (damage > 0)
+                {
+                    Health.TakeDamage(damage);
+                }
+            }
+        }
+    }
+
     class Map
     {
         private char[,] tiles;
@@ -355,6 +399,11 @@ namespace RPGPlayable
                     else if (c == 'B')
                     {
                         Enemies.Add(new ShieldedEnemy(x, y));
+                        tiles[x, y] = '.';
+                    }
+                    else if (c == 'C')
+                    {
+                        Enemies.Add(new CowardEnemy(x, y));
                         tiles[x, y] = '.';
                     }
                     else if (c == 'M')
@@ -417,7 +466,20 @@ namespace RPGPlayable
                     else if (enemies.Exists(e => e.X == x && e.Y == y && !e.Health.IsDead))
                     {
                         var enemy = enemies.Find(e => e.X == x && e.Y == y && !e.Health.IsDead);
-                        Console.ForegroundColor = ConsoleColor.Red;
+
+                        if (enemy.Mark == 'E')
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                        }
+                        else if (enemy.Mark == 'B')
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkRed;
+                        }
+                        else if (enemy.Mark == 'C')
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        }
+
                         Console.Write(enemy.Mark);
                     }
                     else if (Items.Exists(i => i.X == x && i.Y == y))
