@@ -136,6 +136,8 @@ namespace RPGPlayable
         public Player(int x, int y) : base(x, y, 'P', 50) { }
         public bool HasSword { get; private set; } = false;
 
+        public Enemy LastEnemyEncountered { get; private set; } = null;
+
         public override void TakeTurn(Game game)
         {
             var key = Console.ReadKey(true).Key;
@@ -171,6 +173,8 @@ namespace RPGPlayable
             Enemy enemy = game.GetEnemyAt(nx, ny);
             if (enemy != null)
             {
+                LastEnemyEncountered = enemy;
+
                 if (HasSword == true)
                 {
                     enemy.Health.TakeDamage(2);
@@ -249,6 +253,41 @@ namespace RPGPlayable
         }
     }
 
+    class ShieldedEnemy : Enemy
+    {
+        public ShieldedEnemy(int x, int y) : base(x, y, 'B', 10)
+        {
+            Health.SetShield(5);
+        }
+
+        public override void TakeTurn(Game game)
+        {
+            int dx = Math.Sign(game.Player.X - X);
+            int dy = Math.Sign(game.Player.Y - Y);
+
+            AttemptMove(game, dx, dy);
+        }
+
+        private void AttemptMove(Game game, int dx, int dy)
+        {
+            int nx = X + dx;
+            int ny = Y + dy;
+
+            if (game.Player.X == nx && game.Player.Y == ny)
+            {
+                int damage = new Random().Next(1, 3);
+                game.Player.Health.TakeDamage(damage);
+                return;
+            }
+
+            if (game.Map.IsWalkable(nx, ny) && game.GetEnemyAt(nx, ny) == null)
+            {
+                X = nx;
+                Y = ny;
+            }
+        }
+    }
+
     class Map
     {
         private char[,] tiles;
@@ -284,6 +323,11 @@ namespace RPGPlayable
                     else if (c == 'E')
                     {
                         Enemies.Add(new BasicEnemy(x, y));
+                        tiles[x, y] = '.';
+                    }
+                    else if (c == 'B')
+                    {
+                        Enemies.Add(new ShieldedEnemy(x, y));
                         tiles[x, y] = '.';
                     }
                     else if (c == 'M')
@@ -335,8 +379,9 @@ namespace RPGPlayable
                         
                     else if (enemies.Exists(e => e.X == x && e.Y == y && !e.Health.IsDead))
                     {
+                        var enemy = enemies.Find(e => e.X == x && e.Y == y && !e.Health.IsDead);
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.Write('E');
+                        Console.Write(enemy.Mark);
                     }
                     else if (Items.Exists(i => i.X == x && i.Y == y))
                     {
@@ -388,6 +433,20 @@ namespace RPGPlayable
             }
 
             Console.WriteLine("                    ");
+
+            if (player.LastEnemyEncountered != null)
+            {
+                var enemy = player.LastEnemyEncountered;
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine();
+                Console.WriteLine("Last Enemy Encountered:");
+                Console.WriteLine($"Type: {enemy.Mark}");
+                Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}");
+                if (enemy.Health.ShieldMax > 0)
+                {
+                    Console.WriteLine($"Shield: {enemy.Health.ShieldCurrent}/{enemy.Health.ShieldMax}");
+                }
+            }
         }
     }
 
