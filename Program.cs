@@ -12,6 +12,9 @@ namespace RPGPlayable
         public int Current { get; private set; }
         public int Max { get; private set; }
 
+        public int ShieldCurrent { get; private set; } = 0;
+        public int ShieldMax { get; private set; } = 0;
+
         public bool IsDead => Current <= 0;
 
         public Health(int max)
@@ -20,16 +23,41 @@ namespace RPGPlayable
             Current = max;
         }
 
+        public void SetShield(int shield)
+        {
+            ShieldMax = shield;
+            ShieldCurrent = shield;
+        }
+
         public void TakeDamage(int amount)
         {
-            Current -= amount;
-            if (Current < 0) Current = 0;
+            if (ShieldCurrent > 0)
+            {
+                if (amount <= ShieldCurrent)
+                {
+                    ShieldCurrent -= amount;
+                }
+                else
+                {
+                    int leftover = amount - ShieldCurrent;
+                    ShieldCurrent = 0;
+                    Current -= leftover;
+                    if (Current < 0) Current = 0;
+                }
+            }
+            else
+            {
+                Current -= amount;
+                if (Current < 0) Current = 0;
+            }
         }
         public void Heal(int amount)
         {
             Current += amount;
             if (Current > Max)
+            {
                 Current = Max;
+            }
         }
     }
 
@@ -108,8 +136,6 @@ namespace RPGPlayable
         public Player(int x, int y) : base(x, y, 'P', 50) { }
         public bool HasSword { get; private set; } = false;
 
-        public bool HasSheild { get; private set; } = false;
-
         public override void TakeTurn(Game game)
         {
             var key = Console.ReadKey(true).Key;
@@ -176,13 +202,15 @@ namespace RPGPlayable
 
         public void EquipShield()
         {
-            HasSheild = true;
+            Health.SetShield(20);
         }
     }
 
     class Enemy : Entity
     {
         public Enemy(int x, int y) : base(x, y, 'E', 5) { }
+
+        private static Random random = new Random();
 
         public override void TakeTurn(Game game)
         {
@@ -199,7 +227,8 @@ namespace RPGPlayable
 
             if (game.Player.X == nx && game.Player.Y == ny)
             {
-                game.Player.Health.TakeDamage(1);
+                int damage = random.Next(1, 6);
+                game.Player.Health.TakeDamage(damage);
                 return;
             }
 
@@ -341,7 +370,15 @@ namespace RPGPlayable
 
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine();
-            Console.WriteLine($"Player HP: {player.Health.Current}");
+            Console.WriteLine($"Player HP: {player.Health.Current} ");
+
+            if (player.Health.ShieldMax > 0 && player.Health.ShieldCurrent > 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"Shield: {player.Health.ShieldCurrent} ");
+            }
+
+            Console.WriteLine("                    ");
         }
     }
 
