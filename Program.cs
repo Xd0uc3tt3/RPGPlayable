@@ -439,12 +439,16 @@ namespace RPGPlayable
                 var enemy = player.LastEnemyEncountered;
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.WriteLine();
-                Console.WriteLine("Last Enemy Encountered:");
-                Console.WriteLine($"Type: {enemy.Mark}");
-                Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}");
+                Console.WriteLine("Last Enemy Encountered:"        );
+                Console.WriteLine($"Type: {enemy.Mark}      ");
+                Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}     ");
                 if (enemy.Health.ShieldMax > 0)
                 {
-                    Console.WriteLine($"Shield: {enemy.Health.ShieldCurrent}/{enemy.Health.ShieldMax}");
+                    Console.WriteLine($"Shield: {enemy.Health.ShieldCurrent}/{enemy.Health.ShieldMax}     ");
+                }
+                else
+                {
+                    Console.WriteLine("                    ");
                 }
             }
         }
