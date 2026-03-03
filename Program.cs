@@ -206,11 +206,20 @@ namespace RPGPlayable
         }
     }
 
-    class Enemy : Entity
+    abstract class Enemy : Entity
     {
-        public Enemy(int x, int y) : base(x, y, 'E', 5) { }
+        protected static Random random = new Random();
 
-        private static Random random = new Random();
+        protected Enemy(int x, int y, char mark, int hp) : base(x, y, mark, hp)
+        {
+        }
+
+        public abstract override void TakeTurn(Game game);
+    }
+
+    class BasicEnemy : Enemy
+    {
+        public BasicEnemy(int x, int y) : base(x, y, 'E', 5) { }
 
         public override void TakeTurn(Game game)
         {
@@ -274,7 +283,7 @@ namespace RPGPlayable
                     }
                     else if (c == 'E')
                     {
-                        Enemies.Add(new Enemy(x, y));
+                        Enemies.Add(new BasicEnemy(x, y));
                         tiles[x, y] = '.';
                     }
                     else if (c == 'M')
