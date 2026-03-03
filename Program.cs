@@ -255,17 +255,26 @@ namespace RPGPlayable
 
     class ShieldedEnemy : Enemy
     {
-        public ShieldedEnemy(int x, int y) : base(x, y, 'B', 10)
+        private bool movedLastTurn = false;
+        public ShieldedEnemy(int x, int y) : base(x, y, 'B', 15)
         {
-            Health.SetShield(5);
+            Health.SetShield(20);
         }
 
         public override void TakeTurn(Game game)
         {
+            if (movedLastTurn)
+            {
+                movedLastTurn = false;
+                return;
+            }
+
             int dx = Math.Sign(game.Player.X - X);
             int dy = Math.Sign(game.Player.Y - Y);
 
             AttemptMove(game, dx, dy);
+
+            movedLastTurn = true;
         }
 
         private void AttemptMove(Game game, int dx, int dy)
@@ -275,7 +284,7 @@ namespace RPGPlayable
 
             if (game.Player.X == nx && game.Player.Y == ny)
             {
-                int damage = new Random().Next(1, 3);
+                int damage = new Random().Next(5, 11);
                 game.Player.Health.TakeDamage(damage);
                 return;
             }
