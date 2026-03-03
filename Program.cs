@@ -72,6 +72,18 @@ namespace RPGPlayable
         }
     }
 
+    class Sheild : Item
+    {
+        public Sheild(int x, int y)
+            : base(x, y, 'O') { }
+
+        public override void OnPickup(Player player)
+        {
+            player.EquipShield();
+        }
+
+    }
+
 
     abstract class Entity
     {
@@ -95,6 +107,8 @@ namespace RPGPlayable
     {
         public Player(int x, int y) : base(x, y, 'P', 50) { }
         public bool HasSword { get; private set; } = false;
+
+        public bool HasSheild { get; private set; } = false;
 
         public override void TakeTurn(Game game)
         {
@@ -158,6 +172,11 @@ namespace RPGPlayable
         public void EquipSword()
         {
             HasSword = true;
+        }
+
+        public void EquipShield()
+        {
+            HasSheild = true;
         }
     }
 
@@ -239,6 +258,11 @@ namespace RPGPlayable
                         Items.Add(new Sword(x, y));
                         tiles[x, y] = '.';
                     }
+                    else if (c == 'O')
+                    {
+                        Items.Add(new Sheild(x, y));
+                        tiles[x, y] = '.';
+                    }
                     else
                     {
                         tiles[x, y] = c;
@@ -288,9 +312,9 @@ namespace RPGPlayable
                         {
                             Console.ForegroundColor = ConsoleColor.Cyan;
                         }
-                        else
+                        else 
                         {
-                            Console.ForegroundColor = ConsoleColor.White;
+                            Console.ForegroundColor = ConsoleColor.Magenta;
                         }
 
                         Console.Write(item.Mark);
