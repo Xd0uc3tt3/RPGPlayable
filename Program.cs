@@ -196,6 +196,12 @@ namespace RPGPlayable
             {
                 X = nx;
                 Y = ny;
+
+                int damage = game.Map.GetLavaDamage(nx, ny);
+                if (damage > 0)
+                {
+                    Health.TakeDamage(damage);
+                }
             }
         }
 
@@ -249,6 +255,12 @@ namespace RPGPlayable
             {
                 X = nx;
                 Y = ny;
+
+                int damage = game.Map.GetLavaDamage(nx, ny);
+                if (damage > 0)
+                {
+                    Health.TakeDamage(damage);
+                }
             }
         }
     }
@@ -293,6 +305,12 @@ namespace RPGPlayable
             {
                 X = nx;
                 Y = ny;
+
+                int damage = game.Map.GetLavaDamage(nx, ny);
+                if (damage > 0)
+                {
+                    Health.TakeDamage(damage);
+                }
             }
         }
     }
@@ -369,7 +387,17 @@ namespace RPGPlayable
                 return false;
             }
 
-            return tiles[x, y] == '.';
+            return tiles[x, y] == '.' || tiles[x, y] == '~';
+        }
+
+        public int GetLavaDamage(int x, int y)
+        {
+            char tile = tiles[x, y];
+            if (tile == '~')
+            {
+                return 2;
+            }
+            return 0;
         }
 
         public void Draw(Player player, List<Enemy> enemies)
@@ -382,7 +410,7 @@ namespace RPGPlayable
                 {
                     if (player.X == x && player.Y == y)
                     {
-                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.ForegroundColor = ConsoleColor.DarkBlue;
                         Console.Write(player.Mark);
                     }
                         
@@ -419,6 +447,10 @@ namespace RPGPlayable
                         {
                             Console.ForegroundColor = ConsoleColor.Gray;
                         }
+                        else if (tile == '~')
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkRed;
+                        }
                         else if (tile == '.')
                         {
                             Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -449,7 +481,7 @@ namespace RPGPlayable
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.WriteLine();
                 Console.WriteLine("Last Enemy Encountered:"        );
-                Console.WriteLine($"Type: {enemy.Mark}      ");
+                Console.WriteLine($"Type: {enemy.Mark}             ");
                 Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}     ");
                 if (enemy.Health.ShieldMax > 0)
                 {
