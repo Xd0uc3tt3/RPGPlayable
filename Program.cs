@@ -543,7 +543,7 @@ namespace RPGPlayable
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.WriteLine();
                 Console.WriteLine("Last Enemy Encountered:"        );
-                Console.WriteLine($"Type: {enemy.Mark}             ");
+                Console.WriteLine($"Type: {enemy.Mark}                 ");
                 Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}     ");
                 if (enemy.Health.ShieldMax > 0)
                 {
@@ -595,6 +595,7 @@ namespace RPGPlayable
             }
 
             Console.Clear();
+            Console.ForegroundColor = ConsoleColor.DarkRed;
             Console.WriteLine("Game Over.");
         }
 
