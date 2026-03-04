@@ -551,7 +551,7 @@ namespace RPGPlayable
                 }
                 else
                 {
-                    Console.WriteLine("                    ");
+                    Console.WriteLine("                     ");
                 }
             }
         }
