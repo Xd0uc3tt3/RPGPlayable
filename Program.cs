@@ -7,6 +7,28 @@ using System.IO;
 
 namespace RPGPlayable
 {
+    static class GameSettings
+    {
+        public const int PlayerMaxHP = 50;
+        public const int PlayerSwordDamage = 2;
+
+        public const int BasicEnemyHP = 5;
+        public const int ShieldEnemyHP = 15;
+        public const int CowardEnemyHP = 7;
+
+        public const int ShieldEnemyShield = 20;
+
+        public const int MedkitHeal = 5;
+        public const int ShieldAmount = 20;
+
+        public const int MaxWaves = 5;
+        public const int BaseEnemySpawn = 3;
+        public const int EnemyScaling = 2;
+        public const int BaseItemSpawn = 2;
+
+        public const int LavaDamage = 2;
+    }
+
     class Health
     {
         public int Current { get; private set; }
@@ -83,7 +105,7 @@ namespace RPGPlayable
 
         public override void OnPickup(Player player)
         {
-            player.Health.Heal(5);
+            player.Health.Heal(GameSettings.MedkitHeal);
         }
 
     }
@@ -130,7 +152,7 @@ namespace RPGPlayable
 
     class Player : Entity
     {
-        public Player(int x, int y) : base(x, y, 'P', 50) { }
+        public Player(int x, int y) : base(x, y, 'P', GameSettings.PlayerMaxHP) { }
         public bool HasSword { get; private set; } = false;
 
         public Enemy LastEnemyEncountered { get; private set; } = null;
@@ -174,10 +196,10 @@ namespace RPGPlayable
 
                 if (HasSword == true)
                 {
-                    enemy.Health.TakeDamage(2);
+                    enemy.Health.TakeDamage(GameSettings.PlayerSwordDamage);
                 }
 
-                enemy.Health.TakeDamage(2);
+                enemy.Health.TakeDamage(GameSettings.PlayerSwordDamage);
                 return;
             }
 
@@ -209,7 +231,7 @@ namespace RPGPlayable
 
         public void EquipShield()
         {
-            Health.SetShield(20);
+            Health.SetShield(GameSettings.ShieldAmount);
         }
     }
 
@@ -226,7 +248,7 @@ namespace RPGPlayable
 
     class BasicEnemy : Enemy
     {
-        public BasicEnemy(int x, int y) : base(x, y, 'E', 5) { }
+        public BasicEnemy(int x, int y) : base(x, y, 'E', GameSettings.BasicEnemyHP) { }
 
         public override void TakeTurn(Game game)
         {
@@ -265,9 +287,9 @@ namespace RPGPlayable
     class ShieldedEnemy : Enemy
     {
         private bool movedLastTurn = false;
-        public ShieldedEnemy(int x, int y) : base(x, y, 'B', 15)
+        public ShieldedEnemy(int x, int y) : base(x, y, 'B', GameSettings.ShieldEnemyHP)
         {
-            Health.SetShield(20);
+            Health.SetShield(GameSettings.ShieldEnemyShield);
         }
 
         public override void TakeTurn(Game game)
@@ -293,7 +315,7 @@ namespace RPGPlayable
 
             if (game.Player.X == nx && game.Player.Y == ny)
             {
-                int damage = new Random().Next(5, 11);
+                int damage = new Random().Next(2, 6);
                 game.Player.Health.TakeDamage(damage);
                 return;
             }
@@ -314,7 +336,7 @@ namespace RPGPlayable
 
     class CowardEnemy : Enemy
     {
-        public CowardEnemy(int x, int y) : base(x, y, 'C', 7) { }
+        public CowardEnemy(int x, int y) : base(x, y, 'C', GameSettings.CowardEnemyHP) { }
 
         public override void TakeTurn(Game game)
         {
@@ -441,7 +463,7 @@ namespace RPGPlayable
             char tile = tiles[x, y];
             if (tile == '~')
             {
-                return 2;
+                return GameSettings.LavaDamage;
             }
             return 0;
         }
@@ -561,7 +583,7 @@ namespace RPGPlayable
         private List<Enemy> enemies = new List<Enemy>();
 
         private int currentWave = 1;
-        private const int maxWaves = 5;
+        private const int maxWaves = GameSettings.MaxWaves;
 
         private Random rand = new Random();
 
@@ -671,8 +693,8 @@ namespace RPGPlayable
                     currentWave++;
                     Console.Clear();
 
-                    RespawnEnemies(3 + currentWave * 2);
-                    RespawnItems(2 + currentWave);
+                    RespawnEnemies(GameSettings.BaseEnemySpawn + currentWave * GameSettings.EnemyScaling);
+                    RespawnItems(GameSettings.BaseItemSpawn + currentWave * GameSettings.EnemyScaling);
                 }
 
                 Map.Draw(Player, enemies);
