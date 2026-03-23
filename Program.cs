@@ -79,8 +79,7 @@ namespace RPGPlayable
 
     class Medkit : Item
     {
-        public Medkit(int x, int y)
-            : base(x, y, 'M') { }
+        public Medkit(int x, int y) : base(x, y, 'M') { }
 
         public override void OnPickup(Player player)
         {
@@ -91,8 +90,7 @@ namespace RPGPlayable
 
     class Sword : Item
     {
-        public Sword(int x, int y)
-            : base(x, y, 'S') { }
+        public Sword(int x, int y) : base(x, y, 'S') { }
 
         public override void OnPickup(Player player)
         {
@@ -102,8 +100,7 @@ namespace RPGPlayable
 
     class Sheild : Item
     {
-        public Sheild(int x, int y)
-            : base(x, y, 'O') { }
+        public Sheild(int x, int y) : base(x, y, 'O') { }
 
         public override void OnPickup(Player player)
         {
@@ -578,6 +575,11 @@ namespace RPGPlayable
             {
                 enemies.RemoveAll(e => e.Health.IsDead);
 
+                if (enemies.Count == 0)
+                {
+                    break;
+                }
+
                 Map.Draw(Player, enemies);
 
                 Player.TakeTurn(this);
@@ -595,8 +597,17 @@ namespace RPGPlayable
             }
 
             Console.Clear();
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.WriteLine("Game Over.");
+
+            if (Player.Health.IsDead)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine("Game Over.");
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("You Win!");
+            }
         }
 
         public Enemy GetEnemyAt(int x, int y)
@@ -608,6 +619,7 @@ namespace RPGPlayable
         {
             return Map.Items.Find(i => i.X == x && i.Y == y);
         }
+
     }
 
 
