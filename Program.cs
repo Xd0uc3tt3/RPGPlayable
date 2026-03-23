@@ -614,6 +614,46 @@ namespace RPGPlayable
                 }
             }
         }
+        private void RespawnItems(int count)
+        {
+            int spawned = 0;
+
+
+            while (spawned < count)
+            {
+                int x = rand.Next(0, Map.Width);
+                int y = rand.Next(0, Map.Height);
+
+                bool isWalkable = Map.IsWalkable(x, y);
+                bool isPlayerThere = (Player.X == x && Player.Y == y);
+                bool isEnemyThere = GetEnemyAt(x, y) != null;
+
+                bool valid = isWalkable && !isPlayerThere && !isEnemyThere;
+
+                if (valid)
+                {
+                    Item item;
+                    int type = rand.Next(3);
+
+                    if (type == 0)
+                    {
+                        item = new Medkit(x, y);
+                    }
+                    else if (type == 1)
+                    {
+                        item = new Sword(x, y);
+                    }
+                    else
+                    {
+                        item = new Sheild(x, y);
+                    }
+
+                    Map.Items.Add(item);
+                    spawned++;
+                }
+            }
+        }
+
 
         public void Run()
         {
@@ -632,6 +672,7 @@ namespace RPGPlayable
                     Console.Clear();
 
                     RespawnEnemies(3 + currentWave * 2);
+                    RespawnItems(2 + currentWave);
                 }
 
                 Map.Draw(Player, enemies);
