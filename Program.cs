@@ -560,6 +560,11 @@ namespace RPGPlayable
         public Player Player { get; }
         private List<Enemy> enemies = new List<Enemy>();
 
+        private int currentWave = 1;
+        private const int maxWaves = 5;
+
+        private Random rand = new Random();
+
         public Game()
         {
             Map = new Map("map.txt");
@@ -567,6 +572,47 @@ namespace RPGPlayable
             Player = Map.Player;
             enemies = Map.Enemies;
 
+        }
+
+        private void RespawnEnemies(int count)
+        {
+            int spawned = 0;
+
+
+            while (spawned < count)
+            {
+                int x = rand.Next(0, Map.Width);
+                int y = rand.Next(0, Map.Height);
+
+                bool isWalkable = Map.IsWalkable(x, y);
+                bool isPlayerThere = (Player.X == x && Player.Y == y);
+                bool isEnemyThere = GetEnemyAt(x, y) != null;
+
+                bool valid = isWalkable && !isPlayerThere && !isEnemyThere;
+
+                if (valid)
+                {
+                    Enemy enemy;
+
+                    int type = rand.Next(3);
+
+                    if (type == 0)
+                    {
+                        enemy = new BasicEnemy(x, y);
+                    }
+                    else if (type == 1)
+                    {
+                        enemy = new ShieldedEnemy(x, y);
+                    }
+                    else
+                    {
+                        enemy = new CowardEnemy(x, y);
+                    }
+
+                    enemies.Add(enemy);
+                    spawned++;
+                }
+            }
         }
 
         public void Run()
@@ -577,7 +623,15 @@ namespace RPGPlayable
 
                 if (enemies.Count == 0)
                 {
-                    break;
+                    if (currentWave == maxWaves)
+                    {
+                        break;
+                    }
+
+                    currentWave++;
+                    Console.Clear();
+
+                    RespawnEnemies(3 + currentWave * 2);
                 }
 
                 Map.Draw(Player, enemies);
