@@ -6,7 +6,7 @@ namespace RPGPlayable
     class Player : Entity
     {
         public Player(int x, int y) : base(x, y, 'P', GameSettings.PlayerMaxHP) { }
-        public bool HasSword { get; private set; } = false;
+        public int SwordCount { get; private set; } = 0;
 
         public Enemy LastEnemyEncountered { get; private set; } = null;
 
@@ -47,12 +47,9 @@ namespace RPGPlayable
             {
                 LastEnemyEncountered = enemy;
 
-                if (HasSword == true)
-                {
-                    enemy.Health.TakeDamage(GameSettings.PlayerSwordDamage);
-                }
 
-                enemy.Health.TakeDamage(GameSettings.PlayerSwordDamage);
+                int damage = GameSettings.PlayerSwordDamage + SwordCount;
+                enemy.Health.TakeDamage(damage);
                 return;
             }
 
@@ -79,7 +76,7 @@ namespace RPGPlayable
 
         public void EquipSword()
         {
-            HasSword = true;
+            SwordCount++;
         }
 
         public void EquipShield()
