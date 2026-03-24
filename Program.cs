@@ -29,6 +29,73 @@ namespace RPGPlayable
         public const int LavaDamage = 2;
     }
 
+    class EnemyManager
+    {
+        public List<Enemy> Enemies { get; private set; }
+        private Random rand = new Random();
+
+        public EnemyManager(List<Enemy> enemies)
+        {
+            Enemies = enemies;
+        }
+
+        public void Respawn(Map map, Player player, int count)
+        {
+            int spawned = 0;
+
+            while (spawned < count)
+            {
+                int x = rand.Next(map.Width);
+                int y = rand.Next(map.Height);
+
+                bool isWalkable = map.IsWalkable(x, y);
+                bool isPlayerThere = (player.X == x && player.Y == y);
+                bool isEnemyThere = GetEnemyAt(x, y) != null;
+
+                if (!(isWalkable && !isPlayerThere && !isEnemyThere))
+                    continue;
+
+                Enemy enemy;
+                int type = rand.Next(3);
+
+                if (type == 0)
+                {
+                    enemy = new BasicEnemy(x, y);
+                }
+                else if (type == 1)
+                {
+                    enemy = new ShieldedEnemy(x, y);
+                }
+                else
+                {
+                    enemy = new CowardEnemy(x, y);
+                }
+
+                Enemies.Add(enemy);
+                spawned++;
+            }
+        }
+
+        public Enemy GetEnemyAt(int x, int y)
+        {
+            return Enemies.Find(e => e.X == x && e.Y == y && !e.Health.IsDead);
+        }
+
+        public void RemoveDead()
+        {
+            Enemies.RemoveAll(e => e.Health.IsDead);
+        }
+
+        public void Update(Game game)
+        {
+            foreach (var enemy in Enemies)
+            {
+                enemy.TakeTurn(game);
+            }
+                
+        }
+    }
+
     class Health
     {
         public int Current { get; private set; }
@@ -580,7 +647,7 @@ namespace RPGPlayable
     {
         public Map Map { get; }
         public Player Player { get; }
-        private List<Enemy> enemies = new List<Enemy>();
+        private EnemyManager enemyManager;
 
         private int currentWave = 1;
         private const int maxWaves = GameSettings.MaxWaves;
@@ -592,50 +659,11 @@ namespace RPGPlayable
             Map = new Map("map.txt");
 
             Player = Map.Player;
-            enemies = Map.Enemies;
+            enemyManager = new EnemyManager(Map.Enemies);
 
         }
 
-        private void RespawnEnemies(int count)
-        {
-            int spawned = 0;
-
-
-            while (spawned < count)
-            {
-                int x = rand.Next(0, Map.Width);
-                int y = rand.Next(0, Map.Height);
-
-                bool isWalkable = Map.IsWalkable(x, y);
-                bool isPlayerThere = (Player.X == x && Player.Y == y);
-                bool isEnemyThere = GetEnemyAt(x, y) != null;
-
-                bool valid = isWalkable && !isPlayerThere && !isEnemyThere;
-
-                if (valid)
-                {
-                    Enemy enemy;
-
-                    int type = rand.Next(3);
-
-                    if (type == 0)
-                    {
-                        enemy = new BasicEnemy(x, y);
-                    }
-                    else if (type == 1)
-                    {
-                        enemy = new ShieldedEnemy(x, y);
-                    }
-                    else
-                    {
-                        enemy = new CowardEnemy(x, y);
-                    }
-
-                    enemies.Add(enemy);
-                    spawned++;
-                }
-            }
-        }
+       
         private void RespawnItems(int count)
         {
             int spawned = 0;
@@ -681,9 +709,9 @@ namespace RPGPlayable
         {
             while (!Player.Health.IsDead)
             {
-                enemies.RemoveAll(e => e.Health.IsDead);
+                enemyManager.RemoveDead();
 
-                if (enemies.Count == 0)
+                if (enemyManager.Enemies.Count == 0)
                 {
                     if (currentWave == maxWaves)
                     {
@@ -693,18 +721,15 @@ namespace RPGPlayable
                     currentWave++;
                     Console.Clear();
 
-                    RespawnEnemies(GameSettings.BaseEnemySpawn + currentWave * GameSettings.EnemyScaling);
+                    enemyManager.Respawn(Map, Player, GameSettings.BaseEnemySpawn + currentWave * GameSettings.EnemyScaling);
                     RespawnItems(GameSettings.BaseItemSpawn + currentWave * GameSettings.EnemyScaling);
                 }
 
-                Map.Draw(Player, enemies);
+                Map.Draw(Player, enemyManager.Enemies);
 
                 Player.TakeTurn(this);
 
-                foreach (var enemy in enemies)
-                {
-                    enemy.TakeTurn(this);
-                }
+                enemyManager.Update(this);
 
                 if (Player.Health.IsDead)
                 {
@@ -729,7 +754,7 @@ namespace RPGPlayable
 
         public Enemy GetEnemyAt(int x, int y)
         {
-            return enemies.Find(e => e.X == x && e.Y == y && !e.Health.IsDead);
+            return enemyManager.GetEnemyAt(x, y);
         }
 
         public Item GetItemAt(int x, int y)
