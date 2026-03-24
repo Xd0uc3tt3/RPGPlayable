@@ -96,6 +96,64 @@ namespace RPGPlayable
         }
     }
 
+    class ItemManager
+    {
+        public List<Item> Items { get; private set; }
+        private Random rand = new Random();
+
+        public ItemManager(List<Item> items)
+        {
+            Items = items;
+        }
+
+        public void Respawn(Map map, Player player, int count)
+        {
+            int spawned = 0;
+
+            while (spawned < count)
+            {
+                int x = rand.Next(0, map.Width);
+                int y = rand.Next(0, map.Height);
+
+                bool isWalkable = map.IsWalkable(x, y);
+                bool isPlayerThere = (player.X == x && player.Y == y);
+                bool isEnemyThere = map.Enemies.Exists(e => e.X == x && e.Y == y && !e.Health.IsDead);
+
+                if (!isWalkable || isPlayerThere || isEnemyThere)
+                    continue;
+
+                Item item;
+                int type = rand.Next(3);
+
+                if (type == 0)
+                {
+                    item = new Medkit(x, y);
+                }
+                else if (type == 1)
+                {
+                    item = new Sword(x, y);
+                }
+                else
+                {
+                    item = new Sheild(x, y);
+                }
+
+                Items.Add(item);
+                spawned++;
+            }
+        }
+
+        public void Remove(Item item)
+        {
+            Items.Remove(item);
+        }
+
+        public Item GetItemAt(int x, int y)
+        {
+            return Items.Find(i => i.X == x && i.Y == y);
+        }
+    }
+
     class Health
     {
         public int Current { get; private set; }
@@ -274,7 +332,7 @@ namespace RPGPlayable
             if (item != null)
             {
                 item.OnPickup(this);
-                game.Map.Items.Remove(item);
+                game.RemoveItem(item);
                 return;
             }
 
@@ -648,6 +706,7 @@ namespace RPGPlayable
         public Map Map { get; }
         public Player Player { get; }
         private EnemyManager enemyManager;
+        private ItemManager itemManager;
 
         private int currentWave = 1;
         private const int maxWaves = GameSettings.MaxWaves;
@@ -660,49 +719,10 @@ namespace RPGPlayable
 
             Player = Map.Player;
             enemyManager = new EnemyManager(Map.Enemies);
+            itemManager = new ItemManager(Map.Items);
 
         }
 
-       
-        private void RespawnItems(int count)
-        {
-            int spawned = 0;
-
-
-            while (spawned < count)
-            {
-                int x = rand.Next(0, Map.Width);
-                int y = rand.Next(0, Map.Height);
-
-                bool isWalkable = Map.IsWalkable(x, y);
-                bool isPlayerThere = (Player.X == x && Player.Y == y);
-                bool isEnemyThere = GetEnemyAt(x, y) != null;
-
-                bool valid = isWalkable && !isPlayerThere && !isEnemyThere;
-
-                if (valid)
-                {
-                    Item item;
-                    int type = rand.Next(3);
-
-                    if (type == 0)
-                    {
-                        item = new Medkit(x, y);
-                    }
-                    else if (type == 1)
-                    {
-                        item = new Sword(x, y);
-                    }
-                    else
-                    {
-                        item = new Sheild(x, y);
-                    }
-
-                    Map.Items.Add(item);
-                    spawned++;
-                }
-            }
-        }
 
 
         public void Run()
@@ -722,7 +742,7 @@ namespace RPGPlayable
                     Console.Clear();
 
                     enemyManager.Respawn(Map, Player, GameSettings.BaseEnemySpawn + currentWave * GameSettings.EnemyScaling);
-                    RespawnItems(GameSettings.BaseItemSpawn + currentWave * GameSettings.EnemyScaling);
+                    itemManager.Respawn(Map, Player, GameSettings.BaseItemSpawn + currentWave * GameSettings.EnemyScaling);
                 }
 
                 Map.Draw(Player, enemyManager.Enemies);
@@ -759,7 +779,12 @@ namespace RPGPlayable
 
         public Item GetItemAt(int x, int y)
         {
-            return Map.Items.Find(i => i.X == x && i.Y == y);
+            return itemManager.GetItemAt(x, y);
+        }
+
+        public void RemoveItem(Item item)
+        {
+            itemManager.Remove(item);
         }
 
     }
