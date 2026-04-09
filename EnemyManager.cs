@@ -16,6 +16,7 @@ namespace RPGPlayable
         public void Respawn(Map map, Player player, int count)
         {
             int spawned = 0;
+            map.ResetDraw();
 
             while (spawned < count)
             {
@@ -27,7 +28,9 @@ namespace RPGPlayable
                 bool isEnemyThere = GetEnemyAt(x, y) != null;
 
                 if (!(isWalkable && !isPlayerThere && !isEnemyThere))
+                {
                     continue;
+                }
 
                 Enemy enemy;
                 int type = rand.Next(3);

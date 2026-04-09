@@ -15,6 +15,9 @@ namespace RPGPlayable
 
         public List<Item> Items { get; private set; }
 
+        private char[,] lastDrawnTiles;
+        private bool firstDraw = true;
+
         public Map(string filePath)
         {
             var lines = File.ReadAllLines(filePath);
@@ -96,109 +99,131 @@ namespace RPGPlayable
 
         public void Draw(Player player, List<Enemy> enemies)
         {
-            Console.SetCursorPosition(0, 0);
+            if (firstDraw)
+            {
+                Console.Clear();
+                Console.CursorVisible = false;
+                lastDrawnTiles = new char[Width, Height];
+                firstDraw = false;
+            }
 
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
+                    char newChar;
+                    ConsoleColor newColor;
+
                     if (player.X == x && player.Y == y)
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkBlue;
-                        Console.Write(player.Mark);
+                        newChar = player.Mark;
+                        newColor = ConsoleColor.DarkBlue;
                     }
 
                     else if (enemies.Exists(e => e.X == x && e.Y == y && !e.Health.IsDead))
                     {
                         var enemy = enemies.Find(e => e.X == x && e.Y == y && !e.Health.IsDead);
+                        newChar = enemy.Mark;
 
                         if (enemy.Mark == 'E')
                         {
-                            Console.ForegroundColor = ConsoleColor.Red;
+                            newColor = ConsoleColor.Red;
                         }
                         else if (enemy.Mark == 'B')
                         {
-                            Console.ForegroundColor = ConsoleColor.DarkRed;
+                            newColor = ConsoleColor.DarkRed;
                         }
-                        else if (enemy.Mark == 'C')
+                        else
                         {
-                            Console.ForegroundColor = ConsoleColor.DarkYellow;
+                            newColor = ConsoleColor.DarkYellow;
                         }
-
-                        Console.Write(enemy.Mark);
                     }
                     else if (Items.Exists(i => i.X == x && i.Y == y))
                     {
                         var item = Items.Find(i => i.X == x && i.Y == y);
+                        newChar = item.Mark;
 
                         if (item.Mark == 'M')
                         {
-                            Console.ForegroundColor = ConsoleColor.Green;
+                            newColor = ConsoleColor.Green;
                         }
                         else if (item.Mark == 'S')
                         {
-                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            newColor = ConsoleColor.Cyan;
                         }
                         else
                         {
-                            Console.ForegroundColor = ConsoleColor.Magenta;
+                            newColor = ConsoleColor.Magenta;
                         }
-
-                        Console.Write(item.Mark);
                     }
                     else
                     {
                         char tile = tiles[x, y];
+                        newChar = tile;
 
                         if (tile == '#')
                         {
-                            Console.ForegroundColor = ConsoleColor.Gray;
+                            newColor = ConsoleColor.Gray;
                         }
                         else if (tile == '~')
                         {
-                            Console.ForegroundColor = ConsoleColor.DarkRed;
+                            newColor = ConsoleColor.DarkRed;
                         }
-                        else if (tile == '.')
+                        else
                         {
-                            Console.ForegroundColor = ConsoleColor.DarkGray;
+                            newColor = ConsoleColor.DarkGray;
                         }
-
-                        Console.Write(tile);
                     }
 
+                    if (lastDrawnTiles[x, y] != newChar)
+                    {
+                        Console.SetCursorPosition(x, y);
+                        Console.ForegroundColor = newColor;
+                        Console.Write(newChar);
+                        lastDrawnTiles[x, y] = newChar;
+                    }
                 }
-                Console.WriteLine();
             }
 
+            Console.SetCursorPosition(0, Height + 1);
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine();
             Console.WriteLine($"Player HP: {player.Health.Current} ");
 
+            Console.SetCursorPosition(0, Height + 2);
             if (player.Health.ShieldMax > 0 && player.Health.ShieldCurrent > 0)
             {
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"Shield: {player.Health.ShieldCurrent} ");
+                Console.Write($"Shield: {player.Health.ShieldCurrent} ");
+            }
+            else
+            {
+                Console.Write("                    ");
             }
 
-            Console.WriteLine("                    ");
-
+            Console.SetCursorPosition(0, Height + 4);
             if (player.LastEnemyEncountered != null)
             {
                 var enemy = player.LastEnemyEncountered;
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
-                Console.WriteLine();
                 Console.WriteLine("Last Enemy Encountered:");
-                Console.WriteLine($"Type: {enemy.Mark}                 ");
-                Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}     ");
+                Console.SetCursorPosition(0, Height + 5);
+                Console.WriteLine($"Type: {enemy.Mark}");
+                Console.SetCursorPosition(0, Height + 6);
+                Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}".PadRight(20));
                 if (enemy.Health.ShieldMax > 0)
                 {
-                    Console.WriteLine($"Shield: {enemy.Health.ShieldCurrent}/{enemy.Health.ShieldMax}     ");
+                    Console.WriteLine($"Shield: {enemy.Health.ShieldCurrent}/{enemy.Health.ShieldMax}".PadRight(20));
                 }
                 else
                 {
-                    Console.WriteLine("                     ");
+                    Console.WriteLine("".PadRight(20));
                 }
             }
+        }
+
+        public void ResetDraw()
+        {
+            firstDraw = true;
         }
     }
 
