@@ -23,5 +23,8 @@ namespace RPGPlayable
         public const int BaseItemSpawn = 2;
 
         public const int LavaDamage = 2;
+
+        public const int CameraWidth = 20;
+        public const int CameraHeight = 10;
     }
 }

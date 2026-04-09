@@ -185,11 +185,20 @@ namespace RPGPlayable
                 }
             }
 
-            Console.SetCursorPosition(0, Height + 1);
+        }
+
+        public void ResetDraw()
+        {
+            firstDraw = true;
+        }
+
+        public void DrawHUD(Player player, int offsetY)
+        {
+            Console.SetCursorPosition(0, offsetY + 1);
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Player HP: {player.Health.Current} ");
 
-            Console.SetCursorPosition(0, Height + 2);
+            Console.SetCursorPosition(0, offsetY + 2);
             if (player.Health.ShieldMax > 0 && player.Health.ShieldCurrent > 0)
             {
                 Console.ForegroundColor = ConsoleColor.Cyan;
@@ -200,30 +209,86 @@ namespace RPGPlayable
                 Console.Write("                    ");
             }
 
-            Console.SetCursorPosition(0, Height + 4);
+            Console.SetCursorPosition(0, offsetY + 4);
             if (player.LastEnemyEncountered != null)
             {
                 var enemy = player.LastEnemyEncountered;
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.WriteLine("Last Enemy Encountered:");
-                Console.SetCursorPosition(0, Height + 5);
+                Console.SetCursorPosition(0, offsetY + 5);
                 Console.WriteLine($"Type: {enemy.Mark}");
-                Console.SetCursorPosition(0, Height + 6);
+                Console.SetCursorPosition(0, offsetY + 6);
                 Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}".PadRight(20));
+                Console.SetCursorPosition(0, offsetY + 7);
                 if (enemy.Health.ShieldMax > 0)
-                {
                     Console.WriteLine($"Shield: {enemy.Health.ShieldCurrent}/{enemy.Health.ShieldMax}".PadRight(20));
-                }
                 else
-                {
                     Console.WriteLine("".PadRight(20));
-                }
             }
         }
 
-        public void ResetDraw()
+        public void DrawCell(int worldX, int worldY, int screenX, int screenY, Player player, List<Enemy> enemies)
         {
-            firstDraw = true;
+            char newChar;
+            ConsoleColor newColor;
+
+            if (player.X == worldX && player.Y == worldY)
+            {
+                newChar = player.Mark;
+                newColor = ConsoleColor.DarkBlue;
+            }
+            else if (enemies.Exists(e => e.X == worldX && e.Y == worldY && !e.Health.IsDead))
+            {
+                var enemy = enemies.Find(e => e.X == worldX && e.Y == worldY && !e.Health.IsDead);
+                newChar = enemy.Mark;
+                newColor = enemy.Mark == 'E' ? ConsoleColor.Red
+                         : enemy.Mark == 'B' ? ConsoleColor.DarkRed
+                         : ConsoleColor.DarkYellow;
+            }
+            else if (Items.Exists(i => i.X == worldX && i.Y == worldY))
+            {
+                var item = Items.Find(i => i.X == worldX && i.Y == worldY);
+                newChar = item.Mark;
+                newColor = item.Mark == 'M' ? ConsoleColor.Green
+                         : item.Mark == 'S' ? ConsoleColor.Cyan
+                         : ConsoleColor.Magenta;
+            }
+            else
+            {
+                char tile = tiles[worldX, worldY];
+                newChar = tile;
+                newColor = tile == '#' ? ConsoleColor.Gray
+                         : tile == '~' ? ConsoleColor.DarkRed
+                         : ConsoleColor.DarkGray;
+            }
+
+            Console.SetCursorPosition(screenX, screenY);
+            Console.ForegroundColor = newColor;
+            Console.Write(newChar);
+        }
+
+        public char GetDisplayChar(int worldX, int worldY, Player player, List<Enemy> enemies)
+        {
+            if (player.X == worldX && player.Y == worldY)
+            {
+                return player.Mark;
+            }
+
+            var enemy = enemies.Find(e => e.X == worldX && e.Y == worldY && !e.Health.IsDead);
+
+            if (enemy != null)
+            {
+                return enemy.Mark;
+            }
+
+            var item = Items.Find(i => i.X == worldX && i.Y == worldY);
+
+            if (item != null)
+            {
+                return item.Mark;
+            }
+
+            return tiles[worldX, worldY];
         }
     }
 

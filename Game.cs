@@ -13,6 +13,8 @@ namespace RPGPlayable
         private int currentWave = 1;
         private const int maxWaves = GameSettings.MaxWaves;
 
+        private Camera camera;
+
         private Random rand = new Random();
 
         public Game()
@@ -22,6 +24,7 @@ namespace RPGPlayable
             Player = Map.Player;
             enemyManager = new EnemyManager(Map.Enemies);
             itemManager = new ItemManager(Map.Items);
+            camera = new Camera(GameSettings.CameraWidth, GameSettings.CameraHeight);
 
         }
 
@@ -41,13 +44,14 @@ namespace RPGPlayable
                     }
 
                     currentWave++;
-                    Console.Clear();
+                    camera.ResetDraw();
 
                     enemyManager.Respawn(Map, Player, GameSettings.BaseEnemySpawn + currentWave * GameSettings.EnemyScaling);
                     itemManager.Respawn(Map, Player, GameSettings.BaseItemSpawn + currentWave * GameSettings.EnemyScaling);
                 }
 
-                Map.Draw(Player, enemyManager.Enemies);
+                camera.Update(Player, Map);
+                camera.Draw(Map, Player, enemyManager.Enemies);
 
                 Player.TakeTurn(this);
 
