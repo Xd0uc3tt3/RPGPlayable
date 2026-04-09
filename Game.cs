@@ -72,6 +72,27 @@ namespace RPGPlayable
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("You Win!");
             }
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine();
+            Console.WriteLine("Press R to try again or Q to quit");
+
+            while (true)
+            {
+                var key = Console.ReadKey(true).Key;
+
+                if (key == ConsoleKey.R)
+                {
+                    Console.Clear();
+                    var newGame = new Game();
+                    newGame.Run();
+                    break;
+                }
+                else if (key == ConsoleKey.Q)
+                {
+                    break;
+                }
+            }
         }
 
         public Enemy GetEnemyAt(int x, int y)
