@@ -221,9 +221,15 @@ namespace RPGPlayable
                 Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}".PadRight(20));
                 Console.SetCursorPosition(0, offsetY + 7);
                 if (enemy.Health.ShieldMax > 0)
+                {
                     Console.WriteLine($"Shield: {enemy.Health.ShieldCurrent}/{enemy.Health.ShieldMax}".PadRight(20));
+                }
+                    
                 else
+                {
                     Console.WriteLine("".PadRight(20));
+                }
+                    
             }
         }
 
@@ -241,25 +247,19 @@ namespace RPGPlayable
             {
                 var enemy = enemies.Find(e => e.X == worldX && e.Y == worldY && !e.Health.IsDead);
                 newChar = enemy.Mark;
-                newColor = enemy.Mark == 'E' ? ConsoleColor.Red
-                         : enemy.Mark == 'B' ? ConsoleColor.DarkRed
-                         : ConsoleColor.DarkYellow;
+                newColor = enemy.Mark == 'E' ? ConsoleColor.Red : enemy.Mark == 'B' ? ConsoleColor.DarkRed : ConsoleColor.DarkYellow;
             }
             else if (Items.Exists(i => i.X == worldX && i.Y == worldY))
             {
                 var item = Items.Find(i => i.X == worldX && i.Y == worldY);
                 newChar = item.Mark;
-                newColor = item.Mark == 'M' ? ConsoleColor.Green
-                         : item.Mark == 'S' ? ConsoleColor.Cyan
-                         : ConsoleColor.Magenta;
+                newColor = item.Mark == 'M' ? ConsoleColor.Green : item.Mark == 'S' ? ConsoleColor.Cyan : ConsoleColor.Magenta;
             }
             else
             {
                 char tile = tiles[worldX, worldY];
                 newChar = tile;
-                newColor = tile == '#' ? ConsoleColor.Gray
-                         : tile == '~' ? ConsoleColor.DarkRed
-                         : ConsoleColor.DarkGray;
+                newColor = tile == '#' ? ConsoleColor.Gray : tile == '~' ? ConsoleColor.DarkRed : ConsoleColor.DarkGray;
             }
 
             Console.SetCursorPosition(screenX, screenY);
