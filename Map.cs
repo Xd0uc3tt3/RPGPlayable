@@ -219,7 +219,7 @@ namespace RPGPlayable
                 string enemyTypeName = "Enemy";
                 if (enemy.Mark == 'E')
                 {
-                    enemyTypeName = "Basic Enemy   ";
+                    enemyTypeName = "Basic Enemy    ";
                 }
                 if (enemy.Mark == 'C')
                 {
