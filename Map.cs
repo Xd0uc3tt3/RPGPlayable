@@ -216,7 +216,20 @@ namespace RPGPlayable
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.WriteLine("Last Enemy Encountered:");
                 Console.SetCursorPosition(0, offsetY + 5);
-                Console.WriteLine($"Type: {enemy.Mark}");
+                string enemyTypeName = "Enemy";
+                if (enemy.Mark == 'E')
+                {
+                    enemyTypeName = "Basic Enemy   ";
+                }
+                if (enemy.Mark == 'C')
+                {
+                    enemyTypeName = "Cowardly Enemy";
+                }
+                if (enemy.Mark == 'B')
+                {
+                    enemyTypeName = "Shielded Enemy";
+                }
+                Console.WriteLine($"Enemy Type: {enemyTypeName}");
                 Console.SetCursorPosition(0, offsetY + 6);
                 Console.WriteLine($"HP: {enemy.Health.Current}/{enemy.Health.Max}".PadRight(20));
                 Console.SetCursorPosition(0, offsetY + 7);
